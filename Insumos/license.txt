@@ -1,0 +1,28 @@
+SMS Spam Collection v.1 — License and Disclaimer
+
+Copyright (c) Tiago Agostinho de Almeida and José María Gómez Hidalgo.
+
+The SMS Spam Collection v.1 is provided for free, under the following conditions:
+
+1. Attribution:
+   - If you find this corpus useful, please reference the original paper and the web page:
+     http://www.dt.fee.unicamp.br/~tiago/smsspamcollection/  
+   - Please send a message to tiago@dt.fee.unicamp.br to inform about your use of the corpus.
+
+2. No Warranty / Use At Your Own Risk:
+   - The corpus is provided "AS IS", without warranty of any kind, either expressed or implied,
+     including but not limited to warranties of merchantability, fitness for a particular purpose,
+     or non-infringement.
+   - You are solely responsible for your use, distribution, modification, reproduction, and
+     publication of the corpus and any derivative works.
+
+3. Limitation of Liability:
+   - In no event shall the copyright holders, their affiliates, or contributing editors
+     be liable for any indirect, special, incidental, or consequential damages,
+     including, without limitation, loss of goodwill or any commercial damages or losses,
+     even if advised of the possibility of such damages, arising out of your use of the corpus.
+
+---
+
+For more information, please visit the official page:  
+http://www.dt.fee.unicamp.br/~tiago/smsspamcollection/
