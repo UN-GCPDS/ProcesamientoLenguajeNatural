@@ -6,11 +6,11 @@
                 "type": "local",
                 "command": [
                     "node",
-                    "C:/Users/lucas/Documents/GitHub/google-classroom-mcp/dist/index.js"
+                    "C:/Users/Lucas/Documents/google-classroom-mcp/dist/index.js"
                 ],
                 "environment": {
-                    "GOOGLE_CREDENTIALS_PATH": "C:/Users/lucas/Documents/GitHub/google-classroom-mcp/credentials.json",
-                    "GOOGLE_TOKEN_PATH": "C:/Users/lucas/Documents/GitHub/google-classroom-mcp/token.json"
+                    "GOOGLE_CREDENTIALS_PATH": "C:/Users/Lucas/Documents/google-classroom-mcp/credentials.json",
+                    "GOOGLE_TOKEN_PATH": "C:/Users/Lucas/Documents/google-classroom-mcp/token.json"
                 }
             }
         }
