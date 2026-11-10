@@ -22,7 +22,7 @@ Abrir `http://localhost:5678` (o la URL forwardeada `https://TU-CODESPACE-5678.a
 
 ## 3. Importar el workflow
 
-1. n8n > `Workflows` > `...` > `Import from file` > selecciona `Clase 10/n8n-workflow.json`.
+1. n8n > `Workflows` > `...` > `Import from file` > selecciona `Clase 10/Clase10 - Agente Logistica UNAL.json`.
 2. Verás: `Webhook` → `AI Agent` + `OpenRouter Chat Model` + `Window Buffer Memory` + tools `Inventario_UNAL` y `Clima_Manizales`.
 
 ## 4. Credencial OpenRouter (único paso con key externa)
@@ -33,7 +33,7 @@ Abrir `http://localhost:5678` (o la URL forwardeada `https://TU-CODESPACE-5678.a
 
 ## 4b. Conexión Google Sheets con OAuth2 en Codespaces
 
-> Detalle paso a paso en `gu_a_de_conexi_n_google_sheets_oauth2_en_n8n_codespaces.txt`. Resumen operativo:
+> Resumen operativo (OAuth2 en Codespaces):
 
 1. `PORTS > 5678 > Port Visibility > Public` (obligatorio, si queda en `Private` Google bloquea el login y el callback no vuelve).
 2. En n8n: `Credentials > Add Credential > Google Sheets OAuth2 API`, copia el `OAuth Redirect URL` (`https://TU-CODESPACE-5678.app.github.dev/rest/oauth2-credential/callback`).
@@ -102,7 +102,7 @@ No es n8n, es el proxy del Codespace. Corres el script **dentro** del Codespace 
 Funciona con `WEBHOOK_URL`, pero en v2 está deprecada. Cambia a `N8N_WEBHOOK_URL` en `docker-compose.yml` para silenciarlo.
 
 **OAuth Google: `404` al guardar, `403 access_denied`, `redirect_uri_mismatch` o callback en blanco:**
-Ver `gu_a_de_conexi_n_google_sheets_oauth2_en_n8n_codespaces.txt`: no guardar antes de `Sign in`, agregar test user, copiar redirect URI exacta, puerto `5678` en `Public`.
+No guardar antes de `Sign in`, agregar test user, copiar redirect URI exacta, puerto `5678` en `Public`.
 
 **Matar todo y arrancar desde cero:**
 ```bash

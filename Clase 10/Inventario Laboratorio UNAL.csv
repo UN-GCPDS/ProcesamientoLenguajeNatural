@@ -1,8 +1,0 @@
-ID,Componente,Categoria,Cantidad,Ubicacion,Estado
-OSC-01,Osciloscopio Digital 100MHz,Instrumentacion,3,Estante A-4,Disponible
-GEN-02,Generador de Funciones Arbitrarias,Instrumentacion,2,Estante A-5,Disponible
-MUL-03,Multimetro Digital de Precision,Instrumentacion,8,Estante B-1,Disponible
-SEN-04,Sensor de Temperatura Termocupla K,Sensores,15,Caja Logistica 2,Disponible
-ACT-05,Servomotor de Alto Torque,Actuadores,10,Caja Logistica 5,Mantenimiento Requerido
-RPI-06,Raspberry Pi 4 Model B 4GB,Sistemas Embebidos,5,Estante C-2,Disponible
-FPS-07,Fuente de Poder Regulada DC,Instrumentacion,4,Estante A-1,Disponible
