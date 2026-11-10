@@ -1,0 +1,20 @@
+{
+  "name": "PLN Clase 10 + n8n",
+  "dockerComposeFile": ["docker-compose.yml"],
+  "service": "dev",
+  "workspaceFolder": "/workspaces/ProcesamientoLenguajeNatural",
+  "forwardPorts": [5678],
+  "portsAttributes": {
+    "5678": {
+      "label": "n8n",
+      "onAutoForward": "notify"
+    }
+  },
+  "postCreateCommand": "pip install -q requests openpyxl pandas && echo 'Codespace listo. n8n en http://localhost:5678'",
+  "customizations": {
+    "vscode": {
+      "extensions": ["ms-python.python"]
+    }
+  },
+  "remoteUser": "vscode"
+}

@@ -324,18 +324,26 @@
         <section class="bg-surface-container-lowest border border-outline-variant rounded-lg p-stack-md">
           <h2 class="font-headline-md text-headline-md mb-stack-sm text-on-surface">Descripción</h2>
           <p class="font-body-md text-body-md text-on-surface-variant mb-stack-sm">
-            Agente conversacional de logística desplegado en n8n mediante el webhook agente-logistica-unal, que
-            consulta el archivo Inventario Laboratorio UNAL.xlsx y responde sobre disponibilidad de equipos; la
-            presentación en PDF resume el flujo del agente.
+            Agente conversacional de logística con n8n <strong>self-hosted en GitHub Codespaces</strong> (sin n8n Cloud),
+            expuesto en el webhook <code class="font-mono">agente-logistica-unal</code>. Consulta el archivo
+            Inventario Laboratorio UNAL.xlsx en local y responde sobre disponibilidad de equipos; la
+            presentación en PDF resume el flujo ReAct del agente.
           </p>
           <p class="font-body-md text-body-md text-on-surface-variant">
-            Se invoca desde Python con <code class="font-mono">Peticion.py</code> enviando sessionId y chatInput, y se
-            evalúa lo aprendido con el <a class="text-primary hover:underline" href="https://forms.gle/6YnyV7emWQbAY2Pj6" target="_blank" rel="noopener">Quizz</a>.
+            Se levanta con <code class="font-mono">docker compose up -d</code> en <code class="font-mono">.devcontainer/</code>,
+            se importa <code class="font-mono">n8n-workflow.json</code> y se invoca desde Python con
+            <code class="font-mono">Peticion.py</code> enviando sessionId y chatInput (ver
+            <code class="font-mono">Guia_Codespace.md</code>). Se evalúa lo aprendido con el
+            <a class="text-primary hover:underline" href="https://forms.gle/6YnyV7emWQbAY2Pj6" target="_blank" rel="noopener">Quizz</a>.
           </p>
         </section>
         <section class="bg-surface-container-lowest border border-outline-variant rounded-lg p-stack-md">
           <h2 class="font-headline-md text-headline-md mb-stack-sm text-on-surface">Objetivos de Aprendizaje</h2>
           <ul class="list-none space-y-2 font-body-md text-body-md text-on-surface-variant">
+            <li class="flex items-start gap-2">
+              <span class="material-symbols-outlined text-primary text-[20px] mt-1">check_circle</span>
+              Levantar n8n self-hosted en Codespaces con docker compose.
+            </li>
             <li class="flex items-start gap-2">
               <span class="material-symbols-outlined text-primary text-[20px] mt-1">check_circle</span>
               Invocar el webhook de n8n del agente de logística.
@@ -358,8 +366,9 @@
           <h2 class="font-label-md text-label-md uppercase tracking-wider text-on-surface-variant mb-stack-sm">Ficha de
             Fórmula</h2>
           <div class="bg-surface-dim rounded p-stack-sm font-mono text-mono text-on-surface overflow-x-auto">
-            <div class="text-sm mb-1 text-on-surface-variant">Petición al agente (webhook n8n):</div>
-            <code>POST webhook {"sessionId","chatInput"}</code>
+            <div class="text-sm mb-1 text-on-surface-variant">Levantar n8n + petición al agente:</div>
+            <code>docker compose up -d # en .devcontainer/</code><br />
+            <code>POST localhost:5678/webhook {"sessionId","chatInput"}</code>
           </div>
         </section>
         <div class="flex flex-col gap-stack-sm mt-stack-sm">
@@ -371,6 +380,11 @@
             </a>
             <a
               class="bg-surface-container-lowest border border-outline-variant text-on-surface font-label-md text-label-md py-3 px-4 rounded flex items-center justify-center gap-2 hover:border-primary transition-colors"
+              href="https://github.com/UN-GCPDS/ProcesamientoLenguajeNatural/blob/main/Clase%2010/Guia_Codespace.md" target="_blank" rel="noopener">
+              <span class="material-symbols-outlined text-[20px]">terminal</span> Guía Codespaces
+            </a>
+            <a
+              class="col-span-2 bg-surface-container-lowest border border-outline-variant text-on-surface font-label-md text-label-md py-3 px-4 rounded flex items-center justify-center gap-2 hover:border-primary transition-colors"
               href="../assets/presentaciones/clase-10-presentacion.pdf" target="_blank" rel="noopener">
               <span class="material-symbols-outlined text-[20px]">picture_as_pdf</span> Descargar Slides
             </a>

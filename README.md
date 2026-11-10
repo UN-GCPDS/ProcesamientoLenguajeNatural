@@ -52,7 +52,7 @@ El acceso al material se realiza desde la página de cada clase mediante el bot�
 
 - **Acceso al contenido:** la totalidad del contenido se encuentra en la [página del curso](https://UN-GCPDS.github.io/ProcesamientoLenguajeNatural/). Se recomienda iniciar por la Unidad 1.
 - **Organización del repositorio:** el material se encuentra distribuido en carpetas `Clase N/`, además de `Taller 1/`, `Parcial 1/` e `Insumos/`, cada una con el contenido correspondiente a la sesión.
-- **Requerimientos de hardware:** la Unidad 1 no requiere GPU. Para las Unidades 2 y 3 se recomienda Google Colab con GPU T4, clave de Gemini AI Studio y cuenta gratuita de Ngrok.
+- **Requerimientos de hardware:** la Unidad 1 no requiere GPU. Para la Unidad 2 se recomienda Google Colab con GPU T4 y clave de Gemini AI Studio. Para la Unidad 3 (Codespaces + n8n) se usa clave gratuita de OpenRouter y cuenta gratuita de Ngrok.
 - **Quizzes:** son formularios de Google enlazados en las Clases 3, 7 y 9 para autoevaluación.
 
 ---

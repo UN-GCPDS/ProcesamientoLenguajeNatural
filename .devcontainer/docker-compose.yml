@@ -1,0 +1,37 @@
+name: PLN Clase 10 - n8n local
+services:
+  dev:
+    image: mcr.microsoft.com/devcontainers/python:3.11
+    volumes:
+      # Codigo del repo dentro del contenedor de desarrollo
+      - ..:/workspaces/ProcesamientoLenguajeNatural:cached
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: sleep infinity
+    working_dir: /workspaces/ProcesamientoLenguajeNatural
+
+  n8n:
+    image: n8nio/n8n:1.107.0
+    restart: unless-stopped
+    ports:
+      - "5678:5678"
+    environment:
+      - N8N_HOST=0.0.0.0
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      - GENERIC_TIMEZONE=America/Bogota
+      - TZ=America/Bogota
+      - N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=true
+      # WEBHOOK_URL se deja sin fijar a proposito:
+      # en Codespaces la URL publica cambia por codespace.
+      # n8n responde en localhost:5678 y en la URL forwardeada.
+      # Si necesitas URL publica fija, descomenta y ajusta:
+      # - WEBHOOK_URL=https://TU-CODESPACE-5678.app.github.dev/
+    volumes:
+      - n8n_data:/home/node/.n8n
+      # Monta el repo (solo lectura) para que el nodo Spreadsheet File
+      # pueda leer el inventario sin subirlo a mano.
+      # Ruta dentro de n8n: /home/node/files/Clase 10/Inventario Laboratorio UNAL.xlsx
+      - ..:/home/node/files:ro
+
+volumes:
+  n8n_data:

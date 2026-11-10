@@ -1,0 +1,163 @@
+% Clase 10 - Orquestacion de Agentes Autonomos con n8n (Codespaces)
+% Prof. Lucas Miguel Iturriago Salas - UNAL Manizales 2026
+\documentclass[aspectratio=169,11pt]{beamer}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[spanish,es-noshorthands]{babel}
+\usepackage{amsmath,amssymb}
+\usepackage{listings}
+\usepackage{hyperref}
+\usepackage{xcolor}
+
+\usetheme{Madrid}
+\usecolortheme{whale}
+\definecolor{unalblue}{RGB}{0,82,204}
+\setbeamercolor{structure}{fg=unalblue}
+\setbeamercolor{title}{bg=unalblue,fg=white}
+\setbeamercolor{frametitle}{bg=unalblue!10,fg=unalblue!80!black}
+
+\lstset{
+  basicstyle=\ttfamily\scriptsize,
+  breaklines=true,
+  frame=single,
+  backgroundcolor=\color{gray!8},
+  keywordstyle=\color{unalblue}\bfseries,
+  commentstyle=\color{gray},
+  showstringspaces=false,
+  upquote=true,
+}
+
+\title{Orquestación de Agentes Autónomos con n8n}
+\subtitle{Procesamiento del Lenguaje Natural --- Codespaces self-hosted}
+\author{Prof. Lucas Miguel Iturriago Salas}
+\institute[UNAL]{Universidad Nacional de Colombia \\ Dept. Ing. Eléctrica, Electrónica y Computación \\ Primer Semestre -- 2026}
+\date{}
+
+\begin{document}
+
+\begin{frame}
+  \titlepage
+\end{frame}
+
+\begin{frame}{Estructura de la Sesión}
+  \begin{enumerate}
+    \item Sistemas de Agentes Orientados a Eventos
+    \item Inicialización del Agente y Paradigma ReAct
+    \item Grounding y Herramientas Dinámicas
+    \item Despliegue en Producción y MLOps \textbf{(en Codespaces)}
+  \end{enumerate}
+\end{frame}
+
+\begin{frame}{De la Inferencia Secuencial a los Grafos de Ejecución}
+  En sesiones previas operamos bajo inferencia estrictamente secuencial:
+  \begin{equation*}
+    S_t = f(S_{t-1}, y_t)
+  \end{equation*}
+  Al escalar a Agentes Autónomos pasamos a un \textbf{Grafo Dirigido de Ejecución}.
+  El agente es un sistema reactivo conducido por eventos. Cada nodo muta y
+  transporta un payload JSON.
+\end{frame}
+
+\begin{frame}[fragile]{El Mindset de Nodos en la Arquitectura de Software}
+  \textbf{EDA:} el LLM actúa como motor de enrutamiento dinámico sobre conectores I/O.\\
+  Sustituimos canalizaciones rígidas de Python por un lienzo visual serverless.\\[0.5em]
+  Anatomía de un evento en n8n:
+\begin{lstlisting}
+[ { "json": { "meta": { "timestamp": "..." } } } ]
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}{El Paradigma ReAct: Razonamiento y Acción}
+  \begin{enumerate}
+    \item \textbf{Thought:} razonamiento latente $t_t \in T$.
+    \item \textbf{Action:} invoca herramienta $a_t \in A$ con esquema JSON estricto.
+    \item \textbf{Observation:} el entorno devuelve $o_t \in O$.
+  \end{enumerate}
+  \begin{equation*}
+    \text{Prompt}_{t+1} = [\text{Prompt}_t \parallel t_t \parallel a_t \parallel o_t]
+  \end{equation*}
+\end{frame}
+
+\begin{frame}{El Nodo `AI Agent' y el Desacoplamiento de Capas}
+  \begin{itemize}
+    \item \textbf{Cómputo (Model sub-node):} inferencia y T$=0$ vía OpenRouter (\texttt{meta-llama/llama-3.3-70b-instruct:free}).
+    \item \textbf{Lógica (Agent node):} System Instruction, restricciones operativas.
+  \end{itemize}
+  Beneficio: hot-swap del LLM (Llama $\leftrightarrow$ cualquier modelo \texttt{:free} de OpenRouter) sin tocar tools ni personalidad.
+\end{frame}
+
+\begin{frame}{Hiperparámetros Críticos: Temperatura Cero ($T=0.0$)}
+  \begin{equation*}
+    P(y_i) = \frac{\exp(z_i/T)}{\sum_j \exp(z_j/T)}
+  \end{equation*}
+  Con $T \to 0$ la distribución colapsa a one-hot sobre el logit mayor: se elimina la entropía.
+  Para invocar herramientas queremos \textbf{determinismo}, no creatividad.
+\end{frame}
+
+\begin{frame}{Gestión de Estado: Window Buffer Memory}
+  Webhook/REST es stateless. Conectamos \textbf{Window Buffer Memory} (FIFO de ventana $k=10$):
+  poda tokens antiguos, reduce latencia y evita saturar el contexto.
+\end{frame}
+
+\begin{frame}{Rompiendo el Conocimiento Estático con `Grounding'}
+  \textbf{Grounding:} anclar la generación a fuentes verificables en tiempo real.
+  \begin{itemize}
+    \item \textbf{Local (default Codespaces):} nodo \texttt{Spreadsheet File} $\to$ \texttt{/home/node/files/Clase 10/Inventario Laboratorio UNAL.xlsx}, hoja \texttt{Hoja 1}.
+    \item \textbf{Demo docente en vivo:} swap a \texttt{Google Sheets Tool} (Sheet within document, Get Rows).
+    \item \textbf{Telemetría:} \texttt{HTTP Request Tool} GET a Open-Meteo (Manizales 5.07, -75.52).
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{El Vector de Activación Semántica (Descriptions)}
+  El LLM no conoce URLs ni código interno: lee el campo \textbf{Description} del sub-nodo,
+  hace matching de intención y extrae argumentos. Sin buena descripción, no hay invocación.
+\end{frame}
+
+\begin{frame}[fragile]{Arquitectura Self-Hosted en Codespaces (nuevo)}
+  Sin n8n Cloud. Dos contenedores vía \texttt{.devcontainer/docker-compose.yml}:
+\begin{lstlisting}[language=bash]
+cd .devcontainer
+docker compose up -d   # dev + n8n:1.107.0 en :5678
+\end{lstlisting}
+  \begin{itemize}
+    \item n8n en \texttt{http://localhost:5678} (forward \texttt{*.app.github.dev}).
+    \item Repo montado RO en \texttt{/home/node/files} $\to$ inventario sin subir a mano.
+    \item Importar: \texttt{Workflows > Import from file > Clase 10/n8n-workflow.json}.
+    \item Credencial OpenRouter con key gratuita de openrouter.ai (modelo \texttt{llama-3.3-70b-instruct:free}).
+    \item \textbf{Production:} \texttt{/webhook/...} con workflow en \texttt{Active}. \textbf{Test:} \texttt{/webhook-test/...} solo con \texttt{Execute workflow} abierto.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Resolución del Error: `No Session ID found'}
+  Sin chat integrado, la memoria pierde el remitente. Mapeo explícito \textbf{Define below}:
+  \begin{itemize}
+    \item Memoria: \texttt{\{\{ \$('Webhook').item.json.body.sessionId \}\}}
+    \item Prompt: \texttt{\{\{ \$json.body.chatInput \}\}}
+  \end{itemize}
+  Payload raíz del Webhook:
+\begin{lstlisting}
+{"sessionId": "lucas-unal-001", "chatInput": "Hay osciloscopios?"}
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Consumo e Integración desde el Codespace (nuevo)}
+\begin{lstlisting}[language=bash]
+python "Clase 10/Peticion.py" --mensaje "Hay osciloscopios?" --session-id lucas-01
+export N8N_WEBHOOK_URL="https://TU-CODESPACE-5678.app.github.dev/webhook/agente-logistica-unal"
+python "Clase 10/Peticion.py"
+\end{lstlisting}
+\begin{lstlisting}[language=bash]
+curl -X POST http://localhost:5678/webhook/agente-logistica-unal \
+ -H "Content-Type: application/json" \
+ -d '{"sessionId":"lucas-01","chatInput":"Hay osciloscopios?"}'
+\end{lstlisting}
+  Default: \texttt{localhost:5678/webhook/agente-logistica-unal}. Ver \texttt{Guia\_Codespace.md}.
+\end{frame}
+
+\begin{frame}{MLOps Observability y Auditoría de Tokens}
+  Pestaña \textbf{Executions}: payload por arista, tokens/min, latencia y determinismo de function calls.
+  ¡Pipeline listo para producción en Codespaces!
+\end{frame}
+
+\end{document}

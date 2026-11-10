@@ -1,0 +1,201 @@
+{
+  "name": "Clase10 - Agente Logistica UNAL (Codespaces)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "agente-logistica-unal",
+        "responseMode": "whenLastNodeFinishes",
+        "options": {}
+      },
+      "id": "a1b2c3d4-webhook-0001",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        240,
+        400
+      ],
+      "webhookId": "agente-logistica-unal"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.body.chatInput }}",
+        "options": {
+          "systemMessage": "Eres el asistente de logistica de los laboratorios de la UNAL sede Manizales.\n\nREGLAS:\n1. Para disponibilidad de equipos (osciloscopios, Raspberry Pi, multimetros, etc.) USA SIEMPRE la herramienta Inventario_UNAL.\n2. Responde en espanol con: Componente, ID, Cantidad, Ubicacion y Estado.\n3. Si Estado es 'Mantenimiento Requerido', adviertelo explicitamente.\n4. Si Cantidad es 0 o el equipo no existe, dilo claramente y sugiere alternativa del inventario.\n5. Para clima/telemetria de Manizales usa la herramienta Clima_Manizales.\n6. No inventes existencias. Si la herramienta no devuelve el item, di que no hay registro.\n7. Se conciso y operativo.",
+          "maxIterations": 6,
+          "returnIntermediateSteps": false
+        }
+      },
+      "id": "b2c3d4e5-agent-0002",
+      "name": "AI Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        520,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "model": "meta-llama/llama-3.3-70b-instruct:free",
+        "options": {
+          "temperature": 0
+        }
+      },
+      "id": "c3d4e5f6-openrouter-0003",
+      "name": "OpenRouter Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        520,
+        620
+      ],
+      "credentials": {
+        "openRouterApi": {
+          "id": "",
+          "name": "OpenRouter (crear en Credentials con tu OPENROUTER_API_KEY)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Webhook').item.json.body.sessionId }}",
+        "contextWindowLength": 10
+      },
+      "id": "d4e5f6g7-memory-0004",
+      "name": "Window Buffer Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        700,
+        620
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "read",
+        "filePath": "/home/node/files/Clase 10/Inventario Laboratorio UNAL.xlsx",
+        "sheetName": "Hoja 1",
+        "headerRow": true,
+        "descriptionType": "manual",
+        "toolDescription": "Lee el inventario del laboratorio UNAL. Columnas: ID, Componente, Categoria, Cantidad, Ubicacion, Estado. Usalo para responder si un equipo esta disponible, donde esta y cuantos hay.",
+        "options": {}
+      },
+      "id": "e5f6g7h8-sheet-0005",
+      "name": "Inventario_UNAL",
+      "type": "n8n-nodes-base.spreadsheetFile",
+      "typeVersion": 1,
+      "position": [
+        340,
+        620
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://api.open-meteo.com/v1/forecast?latitude=5.07&longitude=-75.52&current=temperature_2m,relative_humidity_2m&timezone=America%2FBogota",
+        "sendQuery": false,
+        "descriptionType": "manual",
+        "toolDescription": "Consulta telemetria meteorologica actual de Manizales (temperatura y humedad). Usala solo si el usuario pregunta por clima o condiciones ambientales.",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "f6g7h8i9-meteo-0006",
+      "name": "Clima_Manizales",
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 2,
+      "position": [
+        880,
+        620
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## Clase 10 - Notas (no se ejecuta)\n\n1. Importar: Workflows > Import from file > `n8n-workflow.json`.\n2. Credencial OpenRouter: crear `OpenRouter` con tu API key de https://openrouter.ai (modelo default meta-llama/llama-3.3-70b-instruct:free).\n3. Inventario local: el path `/home/node/files/Clase 10/...` ya viene montado por docker-compose (volumen `..:/home/node/files:ro`). Si falla, sube el xlsx a mano y ajusta File Path.\n4. PARA EL DOCENTE - swap a Google Sheets en clase:\n   - Anade nodo `Google Sheets Tool` > Resource `Sheet within document` > Operation `Get Rows`, selecciona el doc `Inventario Laboratorio UNAL`.\n   - Copia el `toolDescription` del nodo `Inventario_UNAL`, desactiva `Inventario_UNAL` (nodo Disable) y conecta el Sheets como `ai_tool` al `AI Agent`.\n   - No cambia nada mas: sessionId y chatInput siguen mapeados igual.",
+        "height": 360,
+        "width": 420,
+        "color": 4
+      },
+      "id": "sticky-notas-0007",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        80,
+        80
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Window Buffer Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Inventario_UNAL": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Clima_Manizales": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveExecutionProgress": true,
+    "saveManualExecutions": true
+  },
+  "pinData": {}
+}
