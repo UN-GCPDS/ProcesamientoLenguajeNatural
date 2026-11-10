@@ -1,0 +1,198 @@
+{
+  "name": "Clase10 - Agente Logistica UNAL",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "agente-logistica-unal",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "3b6996c1-3b45-4b47-870c-16c6fc5f9cb5",
+      "name": "Webhook",
+      "webhookId": "a591f04c-36cc-4f81-9368-6f5aa3ef325e"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=={{ $json.body.chatInput }}",
+        "options": {
+          "systemMessage": "Eres el asistente de logistica de los laboratorios de la UNAL sede Manizales.\n\nREGLAS:\n1. Para disponibilidad de equipos (osciloscopios, Raspberry Pi, multimetros, etc.) USA SIEMPRE la herramienta Inventario_UNAL.\n2. Responde en espanol con: Componente, ID, Cantidad, Ubicacion y Estado.\n3. Si Estado es 'Mantenimiento Requerido', adviertelo explicitamente.\n4. Si Cantidad es 0 o el equipo no existe, dilo claramente y sugiere alternativa del inventario.\n5. Para clima/telemetria de Manizales usa la herramienta Clima_Manizales.\n6. No inventes existencias. Si la herramienta no devuelve el item, di que no hay registro.\n7. Se conciso y operativo.",
+          "maxIterations": 10
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        224,
+        0
+      ],
+      "id": "525ebfe4-5795-4dea-884b-1ad4b9819639",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": "nvidia/nemotron-3.5-super-vl:free",
+        "options": {
+          "temperature": 0
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        96,
+        208
+      ],
+      "id": "e4c048c2-63e2-4b87-84cf-613a962a520f",
+      "name": "OpenRouter Chat Model",
+      "credentials": {
+        "openRouterApi": {
+          "id": "HXmfeupPzeUkpkSR",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "=={{ $('Webhook').item.json.body.sessionId }}",
+        "contextWindowLength": 10
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.4,
+      "position": [
+        240,
+        208
+      ],
+      "id": "2dc09a80-7d33-4f45-bd5a-080e232d9d91",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Lee el inventario del laboratorio UNAL. Columnas: ID, Componente, Categoria, Cantidad, Ubicacion, Estado. Usalo para responder si un equipo esta disponible, donde esta y cuantos hay.",
+        "documentId": {
+          "__rl": true,
+          "value": "1YmO1iILpsnDN7U_yPUtKdTlZSug3ZcRO4vZq6TrkFI4",
+          "mode": "list",
+          "cachedResultName": "Inventario Laboratorio UNAL",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1YmO1iILpsnDN7U_yPUtKdTlZSug3ZcRO4vZq6TrkFI4/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 557663947,
+          "mode": "list",
+          "cachedResultName": "Hoja 1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1YmO1iILpsnDN7U_yPUtKdTlZSug3ZcRO4vZq6TrkFI4/edit#gid=557663947"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        384,
+        208
+      ],
+      "id": "602fc20a-9e9b-45e8-aa47-02760e190eeb",
+      "name": "Get row(s) in sheet in Google Sheets",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Tsy7Dlw9TkC70tkj",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "Consulta telemetria meteorologica actual de Manizales (temperatura y humedad). Usala solo si el usuario pregunta por clima o condiciones ambientales.",
+        "url": "https://api.open-meteo.com/v1/forecast?latitude=5.07&longitude=-75.52&current=temperature_2m,relative_humidity_2m&timezone=America%2FBogota",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.5,
+      "position": [
+        560,
+        176
+      ],
+      "id": "12692630-b16e-4f9f-9778-c784d9e4075b",
+      "name": "Clima_Manizales"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet in Google Sheets": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Clima_Manizales": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "1c9771f7-4c73-47f1-9ae5-70a094241f68",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "19141c702dd7f6d13e95621ac00627fb6dbea98514ea89b12f0ee9c3f3a2f1cb"
+  },
+  "nodeGroups": [],
+  "id": "1iKweZfRPIM4pNDE",
+  "tags": []
+}
