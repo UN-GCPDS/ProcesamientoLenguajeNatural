@@ -1,11 +1,12 @@
-name: PLN Clase 10 - n8n local
+name: pln-clase10-n8n
 services:
   dev:
     image: mcr.microsoft.com/devcontainers/python:3.11
     volumes:
       # Codigo del repo dentro del contenedor de desarrollo
+      # (el socket de Docker lo monta el feature docker-outside-of-docker,
+      # no agregar /var/run/docker.sock aqui: produce "duplicate mount")
       - ..:/workspaces/ProcesamientoLenguajeNatural:cached
-      - /var/run/docker.sock:/var/run/docker.sock
     command: sleep infinity
     working_dir: /workspaces/ProcesamientoLenguajeNatural
 
