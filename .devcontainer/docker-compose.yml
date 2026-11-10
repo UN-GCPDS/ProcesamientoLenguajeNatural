@@ -10,7 +10,7 @@ services:
     working_dir: /workspaces/ProcesamientoLenguajeNatural
 
   n8n:
-    image: n8nio/n8n:1.107.0
+    image: n8nio/n8n:latest
     restart: unless-stopped
     ports:
       - "5678:5678"
@@ -21,10 +21,15 @@ services:
       - GENERIC_TIMEZONE=America/Bogota
       - TZ=America/Bogota
       - N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=true
-      # WEBHOOK_URL se deja sin fijar a proposito:
-      # en Codespaces la URL publica cambia por codespace.
-      # n8n responde en localhost:5678 y en la URL forwardeada.
-      # Si necesitas URL publica fija, descomenta y ajusta:
+      # --- Anti "Connection lost" en Codespaces ---
+      # n8n genera las URLs del editor y los eventos push con estas variables.
+      # Si ves el banner "Connection lost", haz esto:
+      # 1. Copia tu URL forwardeada de la pestana PORTS
+      #    (ej: https://TU-CODESPACE-5678.app.github.dev)
+      # 2. Descomenta las dos lineas, pega tu URL (con / final) y recrea:
+      #      docker compose up -d --force-recreate n8n
+      # 3. Abre n8n SIEMPRE con esa URL https, no con localhost.
+      # - N8N_EDITOR_BASE_URL=https://TU-CODESPACE-5678.app.github.dev/
       # - WEBHOOK_URL=https://TU-CODESPACE-5678.app.github.dev/
     volumes:
       - n8n_data:/home/node/.n8n

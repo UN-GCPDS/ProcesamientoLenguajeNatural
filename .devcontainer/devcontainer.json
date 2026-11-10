@@ -3,6 +3,9 @@
   "dockerComposeFile": ["docker-compose.yml"],
   "service": "dev",
   "workspaceFolder": "/workspaces/ProcesamientoLenguajeNatural",
+  "features": {
+    "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {}
+  },
   "forwardPorts": [5678],
   "portsAttributes": {
     "5678": {

@@ -74,6 +74,42 @@ El Codespace se suspende a los 30 min sin uso. Al retomarlo, repite `docker comp
 
 ---
 
+## Solución de problemas
+
+**`docker: command not found`:**
+Las versiones viejas del Codespace no traían el CLI de Docker. Ya está corregido en `.devcontainer/devcontainer.json` (feature `docker-outside-of-docker`). Aplica con: `Ctrl+Shift+P` → `Codespaces: Rebuild Container`.
+
+**Matar todo y arrancar desde cero:**
+```bash
+cd .devcontainer
+docker compose down        # apaga y borra contenedores, CONSERVA datos de n8n
+docker compose down -v     # lo anterior + BORRA n8n_data (usuarios, workflows,
+                           # credenciales: n8n queda de fabrica, hay que reimportar todo)
+docker compose pull n8n
+docker compose up -d
+```
+Opción nuclear (VM nueva, cero absoluto): borra el Codespace en `github.com/codespaces` y crea uno nuevo con `Create codespace on main`.
+
+**Me pide actualizar n8n / tengo versión vieja:**
+```bash
+cd .devcontainer
+docker compose pull n8n
+docker compose up -d --force-recreate n8n
+```
+(El compose ya usa `n8nio/n8n:latest`. La migración de la base interna es automática; tus workflows y credenciales están en el volumen `n8n_data` y se conservan.)
+
+**Banner "Connection lost" todo el tiempo:**
+Causa: el editor de n8n pierde el canal de eventos porque genera sus URLs con `localhost`, pero tú lo abres por la URL forwardeada del proxy de Codespaces.
+1. Abre n8n **siempre** con la URL https de la pestaña `PORTS` (`https://TU-CODESPACE-5678.app.github.dev`), nunca con `http://localhost:5678`.
+2. Si persiste: copia esa URL, descomenta `N8N_EDITOR_BASE_URL` y `WEBHOOK_URL` en `.devcontainer/docker-compose.yml` con tu URL (con `/` final) y recrea:
+```bash
+cd .devcontainer
+docker compose up -d --force-recreate n8n
+```
+3. Recarga el navegador con caché limpia (Ctrl+Shift+R). Verifica que el puerto 5678 esté en `Private` o `Public` en `PORTS` (con `Private` basta si lo abres en el mismo navegador donde logueaste GitHub).
+
+---
+
 ## Apéndice para el docente — demo en vivo: Google Sheets
 
 El workflow por defecto usa `Spreadsheet File` local para evitar OAuth en clase. Para enseñar el grounding con Sheets sin romper nada:
