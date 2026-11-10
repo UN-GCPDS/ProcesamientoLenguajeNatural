@@ -1,7 +1,7 @@
 name: pln-clase10-n8n
 services:
   dev:
-    image: mcr.microsoft.com/devcontainers/python:3.11
+    image: mcr.microsoft.com/devcontainers/python:3.11-bookworm
     volumes:
       # Codigo del repo dentro del contenedor de desarrollo
       # (el socket de Docker lo monta el feature docker-outside-of-docker,
