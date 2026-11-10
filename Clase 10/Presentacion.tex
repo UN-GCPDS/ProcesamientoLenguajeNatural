@@ -81,7 +81,7 @@
 
 \begin{frame}{El Nodo `AI Agent' y el Desacoplamiento de Capas}
   \begin{itemize}
-    \item \textbf{Cómputo (Model sub-node):} inferencia y T$=0$ vía OpenRouter (\texttt{meta-llama/llama-3.3-70b-instruct:free}).
+    \item \textbf{Cómputo (Model sub-node):} inferencia y T$=0$ vía OpenRouter (\texttt{nvidia/nemotron-3.5-super-vl:free}).
     \item \textbf{Lógica (Agent node):} System Instruction, restricciones operativas.
   \end{itemize}
   Beneficio: hot-swap del LLM (Llama $\leftrightarrow$ cualquier modelo \texttt{:free} de OpenRouter) sin tocar tools ni personalidad.
@@ -118,13 +118,13 @@
   Sin n8n Cloud. Dos contenedores vía \texttt{.devcontainer/docker-compose.yml}:
 \begin{lstlisting}[language=bash]
 cd .devcontainer
-docker compose up -d   # dev + n8n:1.107.0 en :5678
+docker compose up -d   # dev + n8n:latest (2.47.3 en clase) en :5678
 \end{lstlisting}
   \begin{itemize}
-    \item n8n en \texttt{http://localhost:5678} (forward \texttt{*.app.github.dev}).
+    \item n8n en \texttt{https://TU-CODESPACE-5678.app.github.dev} (puerto 5678 en \texttt{Public} para OAuth; peticiones internas por \texttt{http://localhost:5678}).
     \item Repo montado RO en \texttt{/home/node/files} $\to$ inventario sin subir a mano.
     \item Importar: \texttt{Workflows > Import from file > Clase 10/n8n-workflow.json}.
-    \item Credencial OpenRouter con key gratuita de openrouter.ai (modelo \texttt{llama-3.3-70b-instruct:free}).
+    \item Credencial OpenRouter con key gratuita de openrouter.ai (modelo \texttt{nvidia/nemotron-3.5-super-vl:free}, verificado en clase).
     \item \textbf{Production:} \texttt{/webhook/...} con workflow en \texttt{Active}. \textbf{Test:} \texttt{/webhook-test/...} solo con \texttt{Execute workflow} abierto.
   \end{itemize}
 \end{frame}

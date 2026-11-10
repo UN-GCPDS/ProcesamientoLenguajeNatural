@@ -1,0 +1,139 @@
+================================================================================
+GUÍA PRÁCTICA: CONEXIÓN DE GOOGLE SHEETS EN n8n CON GITHUB CODESPACES (OAUTH 2.0)
+================================================================================
+
+Objetivo:
+Vincular el nodo de Google Sheets en n8n utilizando tus propias credenciales
+OAuth 2.0 de Google Cloud Console dentro de un entorno alojado en GitHub Codespaces.
+
+--------------------------------------------------------------------------------
+REQUISITOS PREVIOS
+--------------------------------------------------------------------------------
+1. Una cuenta de Google (Gmail o Google Workspace).
+2. Entorno de GitHub Codespaces con n8n en ejecución.
+3. Navegador web abierto en dos pestañas principales:
+   - Pestaña A: Google Cloud Console.
+   - Pestaña B: Tu panel web de n8n.
+
+================================================================================
+PASO 1: PREPARAR EL PUERTO Y OBTENER LA URL EN GITHUB CODESPACES
+================================================================================
+Antes de ir a Google, debes asegurarte de que n8n sea accesible públicamente para
+recibir la respuesta de autorización:
+
+1.1. En tu pestaña de GitHub Codespaces (donde corre n8n), ve a la barra inferior
+     y abre la pestaña "Ports" (Puertos).
+1.2. Localiza el puerto 5678.
+1.3. En la columna "Port Visibility" (Visibilidad):
+     - Haz clic derecho sobre "Private".
+     - Cámbialo obligatoriamente a "Public".
+     * Nota: Si lo dejas en "Private", Google no podrá completar la autenticación
+       y recibirás bloqueos de inicio de sesión.
+1.4. Abre tu instancia web de n8n.
+1.5. En n8n, ve a:
+     Credenciales (Credentials) > Add Credential > "Google Sheets OAuth2 API".
+1.6. Localiza el campo de solo lectura: "OAuth Redirect URL".
+1.7. Copia esa URL completa. Se verá muy similar a esto:
+     https://tu-codespace-id-5678.app.github.dev/rest/oauth2-credential/callback
+     (Guárdala a mano para el Paso 3).
+
+================================================================================
+PASO 2: CREAR Y CONFIGURAR EL PROYECTO EN GOOGLE CLOUD
+================================================================================
+2.1. Ingresa a la consola: https://console.cloud.google.com/
+2.2. En la barra superior, haz clic en el selector de proyectos y pulsa
+     "Nuevo proyecto".
+2.3. Asigna un nombre claro (ej. "n8n-automatizaciones") y haz clic en "Crear".
+2.4. Verifica que el nuevo proyecto quede seleccionado en la barra superior.
+
+2.5. Habilitar las APIs necesarias:
+     - En el menú lateral (o en la barra de búsqueda superior), entra a:
+       "APIs y servicios" > "Biblioteca" (Library).
+     - Busca "Google Sheets API" > Haz clic en ella > Presiona "Habilitar".
+     - Vuelve a la Biblioteca, busca "Google Drive API" > Haz clic en ella >
+       Presiona "Habilitar".
+       (Drive API es obligatoria para que n8n liste y busque los archivos por nombre).
+
+================================================================================
+PASO 3: CONFIGURAR LA PANTALLA DE CONSENTIMIENTO Y USUARIOS DE PRUEBA
+================================================================================
+3.1. En el menú lateral, ve a "APIs y servicios" > "Pantalla de consentimiento de OAuth"
+     (o Google Auth Platform).
+3.2. Selecciona Tipo de usuario: "Externo" (External) y haz clic en "Crear".
+3.3. Completa los campos básicos obligatorios:
+     - Nombre de la app: "n8n"
+     - Correo de asistencia: Tu correo de Google
+     - Datos de contacto del desarrollador: Tu correo de Google
+3.4. Haz clic en "Guardar y continuar".
+3.5. En la sección "Permisos" (Scopes), no necesitas agregar nada manualmente;
+     haz clic directo en "Guardar y continuar".
+3.6. En la sección "Público" / "Usuarios de prueba" (Test users):
+     - Haz clic en "+ Add users" (o "+ Agregar usuarios").
+     - Escribe tu dirección de correo de Google (la cuenta con la que abrirás las hojas).
+     - Guarda los cambios.
+     * ADVERTENCIA: Si omites registrar tu correo aquí, Google te arrojará el error
+       "Error 403: access_denied" al intentar conectar la cuenta.
+
+================================================================================
+PASO 4: CREAR EL CLIENT ID Y CLIENT SECRET
+================================================================================
+4.1. En el menú lateral, ve a "APIs y servicios" > "Credenciales"
+     (o en la sección "Clientes" si estás en Google Auth Platform).
+4.2. Haz clic arriba en "+ Crear credenciales" y elige "ID de cliente de OAuth".
+4.3. En "Tipo de aplicación", selecciona: "Aplicación web".
+4.4. Nombre: Dale un nombre identificativo (ej. "n8n Web Client").
+4.5. En "URIs de redireccionamiento autorizados":
+     - Haz clic en "+ Agregar URI".
+     - Pega la URL exacta que copiaste de n8n en el Paso 1.7
+       (ej. https://...app.github.dev/rest/oauth2-credential/callback).
+4.6. Haz clic en "Crear".
+4.7. Se abrirá una ventana emergente:
+     - Copia el "ID de cliente" (Client ID).
+     - Copia el "Secreto de cliente" (Client Secret).
+
+================================================================================
+PASO 5: CONECTAR EN n8n (ORDEN EXACTO PARA EVITAR ERRORES)
+================================================================================
+5.1. Regresa a n8n en la credencial de Google Sheets OAuth2 API abierta.
+5.2. Pega tu "Client ID".
+5.3. Pega tu "Client Secret".
+5.4. ¡ALERTA IMPORTANTE!
+     >>> NO hagas clic en el botón superior "Save" todavía. <<<
+     Si intentas guardar sin autenticarte primero, el servidor responderá con
+     "Problem creating credential: Request failed with status code 404".
+5.5. Haz clic en el botón blanco con el logo de Google:
+     "Sign in with Google" (ubicado dentro de la franja amarilla).
+5.6. Se abrirá una ventana emergente de Google:
+     - Selecciona la cuenta que registraste como usuario de prueba.
+     - Si aparece la pantalla "Google no ha verificado esta app":
+       Haz clic en "Configuración avanzada" (Advanced) > "Ir a n8n (no seguro)".
+     - Acepta los permisos de acceso a Drive y Sheets.
+5.7. Una vez aceptado, la ventana emergente se cerrará y la franja amarilla en
+     n8n cambiará a color verde ("Account connected").
+5.8. AHORA SÍ: Haz clic en el botón "Save" en la esquina superior derecha.
+
+================================================================================
+GUÍA DE RESOLUCIÓN DE PROBLEMAS RÁPIDA (TROUBLESHOOTING)
+================================================================================
+A. Error: "Request failed with status code 404"
+   Causa: Tu GitHub Codespace se fue a reposo por inactividad o intentaste guardar
+   con el botón "Save" antes de presionar "Sign in with Google".
+   Solución: Revisa la terminal de Codespaces para verificar que n8n esté corriendo,
+   recarga la página con Ctrl+F5, vuelve a poner las claves y pulsa primero
+   "Sign in with Google".
+
+B. Error: "403 access_denied" / "Esta app está bloqueada"
+   Causa: El correo con el que intentas iniciar sesión no fue añadido en la lista
+   de "Usuarios de prueba" (Test users).
+   Solución: Ve a Google Cloud Console > Pantalla de consentimiento (o Público) >
+   agrega tu correo a la lista de usuarios de prueba.
+
+C. Error: "redirect_uri_mismatch"
+   Causa: La URL configurada en Google Cloud no coincide letra por letra con la de n8n.
+   Solución: Copia nuevamente el campo "OAuth Redirect URL" de n8n y asegúrate de
+   que no tenga espacios extras al pegarlo en los URIs autorizados de Google.
+
+D. La página de retorno se queda cargando en blanco o no conecta:
+   Causa: El puerto 5678 en GitHub Codespaces está en modo "Private".
+   Solución: Cambia la visibilidad del puerto 5678 a "Public" en la pestaña Ports.
+================================================================================
