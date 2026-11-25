@@ -1,0 +1,9 @@
+POST http://n8n:5678/webhook/agente-logistica-unal
+Payload: {"sessionId": "t0-prueba", "chatInput": "¿Qué clima hace hoy en Manizales?"}
+Status: 200
+
+Respuesta del agente:
+Clima actual en Manizales (15:45 h):
+
+- Temperatura: 19.6 °C
+- Humedad relativa: 74 %
