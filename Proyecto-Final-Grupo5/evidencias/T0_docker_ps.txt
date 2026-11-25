@@ -1,0 +1,3 @@
+NAME                    IMAGE                                                                                               COMMAND                  SERVICE   CREATED         STATUS         PORTS
+pln-clase10-n8n-dev-1   vsc-procesamientolenguajenatural-aae25fc4a3b7bcfbe2a4805ae33b895c643d3ba3cdb029ffe79b7816d1c319c8   "/bin/sh -c 'echo Co…"   dev       5 minutes ago   Up 5 minutes   
+pln-clase10-n8n-n8n-1   n8nio/n8n:latest                                                                                    "tini -- /docker-ent…"   n8n       5 minutes ago   Up 5 minutes   0.0.0.0:5678->5678/tcp, [::]:5678->5678/tcp
