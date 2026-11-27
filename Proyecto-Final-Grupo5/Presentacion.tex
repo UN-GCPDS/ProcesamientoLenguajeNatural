@@ -1,0 +1,137 @@
+\documentclass[11pt]{article}
+\usepackage[paperwidth=160mm,paperheight=90mm,left=10mm,right=10mm,top=7mm,bottom=6mm]{geometry}
+\usepackage[spanish]{babel}
+\usepackage[T1]{fontenc}
+\usepackage{xcolor}
+\usepackage{hyperref}
+
+\definecolor{Pino}{HTML}{143E37}
+\definecolor{Mineral}{HTML}{007564}
+\definecolor{Papel}{HTML}{F5F6F1}
+\definecolor{Tinta}{HTML}{1A2E2A}
+\pagecolor{Papel}
+\color{Tinta}
+\renewcommand{\familydefault}{\sfdefault}
+\setlength{\parindent}{0pt}
+\hypersetup{colorlinks, urlcolor=Mineral, pdftitle={Jaleco Sports — Agente de postventa}, pdfauthor={Grupo 5 — UNAL Manizales}}
+
+\newenvironment{slide}[1]{%
+  \thispagestyle{empty}%
+  \begin{minipage}[t][0.97\textheight][t]{\textwidth}%
+  \begingroup\setlength{\fboxsep}{6pt}%
+  \colorbox{Pino}{\parbox{\dimexpr\linewidth-2\fboxsep\relax}{\color{white}\Large\bfseries #1}}%
+  \endgroup\par\medskip
+}{%
+  \par\vfill\hrule\smallskip
+  {\scriptsize Grupo 5 · Jaleco Sports\hfill\thepage\,/\,10}\par
+  \end{minipage}\newpage
+}
+
+\newenvironment{block}[1]{%
+  \par\medskip\textcolor{Mineral}{\bfseries #1}\par\smallskip
+}{\par\medskip}
+
+\begin{document}
+
+\begin{slide}{Reclamos de postventa en Jaleco Sports}
+  {\LARGE\bfseries Del mensaje libre al caso radicado}\par\medskip
+  Jaleco Sports es una tienda ficticia de artículos deportivos. Los clientes describen un problema con su pedido y soporte debe identificar el motivo, reunir datos y aplicar la regla correspondiente.
+  \begin{block}{Quiénes usan el sistema}
+    El cliente completa su solicitud por chat. Soporte recibe un caso con pedido, motivo, evidencia pendiente y referencia de la regla.
+  \end{block}
+  \medskip Procesamiento de Lenguaje Natural · UNAL Manizales
+\end{slide}
+
+\begin{slide}{Proceso actual y costo por medir}
+  \begin{enumerate}
+    \item Interpretar el mensaje y pedir información faltante.
+    \item Consultar el pedido y localizar la política vigente.
+    \item Transcribir la solicitud y derivarla a soporte.
+  \end{enumerate}
+  \begin{block}{Medición prevista}
+    Comparar el tiempo hasta un registro utilizable y los campos completos en el recorrido manual y asistido, sobre los mismos casos sintéticos.
+  \end{block}
+\end{slide}
+
+\begin{slide}{Propuesta y alcance}
+  \begin{itemize}
+    \item El modelo distingue cambio por talla, defecto, pedido incompleto y retracto. Pide aclaración cuando hay ambigüedad.
+    \item El workflow consulta el pedido y aplica una regla versionada con código.
+    \item El cliente revisa la solicitud, confirma la radicación y descarga su constancia.
+  \end{itemize}
+  \begin{block}{Límite de la decisión}
+    El resultado es preliminar. Los casos complejos pasan a soporte. Reembolsos, transporte y verificación visual quedan para trabajo futuro.
+  \end{block}
+\end{slide}
+
+\begin{slide}{Recorrido de la demostración}
+  \begin{enumerate}
+    \item Identificar un pedido en la sesión A y recuperarlo en el siguiente turno.
+    \item Repetir el seguimiento en la sesión B y comprobar que falta contexto.
+    \item Mostrar datos del pedido y el cálculo de un plazo con un festivo.
+    \item Intentar radicar sin confirmar, comprobar el conteo, y luego confirmar.
+    \item Verificar el radicado, reintentar y descargar la constancia.
+  \end{enumerate}
+  \medskip Ensayo previsto de hasta diez minutos. Integración pendiente.
+\end{slide}
+
+\begin{slide}{Diseño en n8n}
+  \begin{block}{Ruta de conversación}
+    Webhook de chat $\rightarrow$ agente con temperatura 0 y memoria por sesión $\rightarrow$ consulta de pedido y política $\rightarrow$ evaluación y borrador.
+  \end{block}
+  \begin{block}{Ruta de radicación}
+    Webhook de confirmación $\rightarrow$ verificación de sesión y borrador $\rightarrow$ escritura idempotente $\rightarrow$ radicado persistido.
+  \end{block}
+  \medskip Streamlit accede a n8n por su dirección interna. PostgreSQL almacena la memoria, los datos de referencia y los casos.
+\end{slide}
+
+\begin{slide}{Del SPEC al código}
+  \begin{itemize}
+    \item \textbf{SPEC} fija historias y criterios medibles.
+    \item \textbf{PLAN} fija contratos, topología y fuente de datos.
+    \item \textbf{TASKS} vincula cada tarea con una prueba y su evidencia.
+  \end{itemize}
+  \begin{block}{Decisiones de diseño}
+    Los plazos se calculan con código. PostgreSQL permite cargar datos reproducibles e imponer unicidad sobre el borrador confirmado.
+  \end{block}
+\end{slide}
+
+\begin{slide}{Grounding y controles}
+  \begin{itemize}
+    \item Cada evaluación identifica el pedido, la regla, la versión y las fechas utilizadas.
+    \item El cliente exige una casilla. El servidor valida el borrador, la sesión y la confirmación antes de crear el caso.
+    \item Un pedido desconocido o una regla insuficiente genera aclaración o revisión humana. Los errores de servicio se muestran en español.
+  \end{itemize}
+  \medskip Evidencia prevista en el JSON crudo, las ejecuciones de n8n y el registro de casos.
+\end{slide}
+
+\begin{slide}{Evaluación}
+  \begin{itemize}
+    \item PLN: corpus etiquetado, macro-F1, confusiones y abstenciones.
+    \item Reglas: último día, festivo, plazo vencido y evidencia incompleta.
+    \item Sistema: dos sesiones, escritura bloqueada, confirmación, reintento y constancia.
+  \end{itemize}
+  \begin{block}{Estado de este borrador}
+    Existe una prueba de humo del entorno con el agente de clase. Las pruebas de Jaleco se incorporarán cuando estén ejecutadas.
+  \end{block}
+\end{slide}
+
+\begin{slide}{Limitaciones y trabajo futuro}
+  \begin{itemize}
+    \item Demostración con tienda y pedidos sintéticos.
+    \item Cobertura limitada a las reglas y excepciones documentadas.
+    \item Validar el ahorro de tiempo con más casos e incorporar datos operativos autorizados.
+    \item Explorar integraciones de soporte y transporte tras evaluar el flujo inicial.
+  \end{itemize}
+\end{slide}
+
+\begin{slide}{Equipo, repositorio y demo}
+  \begin{itemize}
+    \item Frentes de trabajo: datos y evaluación, n8n, Streamlit, SDD y presentación.
+    \item Reparto por integrante y enlace de demo pendientes de integración.
+    \item \href{https://github.com/juancohen117/ProcesamientoLenguajeNatural/tree/main/Proyecto-Final-Grupo5}{Repositorio del Grupo 5 en GitHub}.
+  \end{itemize}
+  \medskip Presentación inicial para revisión del equipo.
+\end{slide}
+
+\end{document}

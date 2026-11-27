@@ -1,0 +1,163 @@
+{
+  "id": "JalecoG5Base2026",
+  "name": "Jaleco Sports · Postventa",
+  "active": false,
+  "nodes": [
+    {
+      "id": "6cbc4fa2-f618-4a59-bef8-dcbf481aecc2",
+      "name": "Webhook chat",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 0],
+      "webhookId": "ef6f5ea9-401f-40f7-a68c-2aafa589c330",
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "jaleco-chat",
+        "authentication": "headerAuth",
+        "responseMode": "responseNode",
+        "options": {}
+      }
+    },
+    {
+      "id": "8c8fd01b-c511-4c9c-93a5-1402eff7bf14",
+      "name": "Webhook radicación",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 200],
+      "webhookId": "cc7c4a71-4d81-49e3-be67-f97d2ba46896",
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "jaleco-radicar",
+        "authentication": "headerAuth",
+        "responseMode": "responseNode",
+        "options": {}
+      }
+    },
+    {
+      "id": "e1485aba-aeb8-4385-a636-242d6ed072da",
+      "name": "Validar chat y extraer pedido",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [250, 0],
+      "parameters": {
+        "jsCode": "const { sessionId, chatInput } = $input.first().json.body ?? {};\nconst uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;\nconst message = typeof chatInput === 'string' ? chatInput.trim() : '';\nif (typeof sessionId !== 'string' || !uuid.test(sessionId) || !message || [...message].length > 2000) {\n  return [{ json: { status: 400, body: { output: 'Envía una sesión válida y un mensaje de 1 a 2000 caracteres.', error: { code: 'INVALID_INPUT' } } } }];\n}\n\nconst orderIds = [...new Set((message.match(/\\bJS-[0-9]{3}\\b/gi) ?? []).map(id => id.toUpperCase()))];\nif (orderIds.length === 1) {\n  return [{ json: { orderId: orderIds[0] } }];\n}\n\nconst output = orderIds.length === 0\n  ? '¿Cuál es el número de tu pedido? Por ejemplo, JS-101.'\n  : 'Encontré varios números de pedido. ¿Cuál quieres consultar?';\nreturn [{ json: { status: 200, body: { output, evidence: [], draft: null } } }];"
+      }
+    },
+    {
+      "id": "6c776999-e6e8-4c44-a56e-c29c036ea08e",
+      "name": "Validar radicación",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [250, 200],
+      "parameters": {
+        "jsCode": "const { sessionId, draftId, confirmed } = $input.first().json.body ?? {};\nconst uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;\nif (typeof sessionId !== 'string' || typeof draftId !== 'string' || !uuid.test(sessionId) || !uuid.test(draftId)) {\n  return [{ json: { status: 400, body: { output: 'Envía una sesión y un borrador válidos.', error: { code: 'INVALID_INPUT' } } } }];\n}\nif (confirmed !== true) {\n  return [{ json: { status: 400, body: { output: 'La radicación requiere confirmación explícita.', error: { code: 'CONFIRMATION_REQUIRED' } } } }];\n}\nreturn [{ json: { status: 503, body: { output: 'La radicación aún no está conectada en esta base.', error: { code: 'PERSISTENCE_UNAVAILABLE' } } } }];"
+      }
+    },
+    {
+      "id": "21953b66-1ed9-41e2-878f-afb0359e4764",
+      "name": "¿Consultar pedido?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [470, 0],
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 2 },
+          "conditions": [
+            {
+              "id": "68e0637a-8b53-4f28-a24d-ab5af811619a",
+              "leftValue": "={{ $json.orderId ?? '' }}",
+              "rightValue": "",
+              "operator": { "type": "string", "operation": "notEmpty", "singleValue": true }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "7aabd38c-9449-4c11-8444-918381722827",
+      "name": "Consultar pedido en PostgreSQL",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.8,
+      "position": [700, -100],
+      "onError": "continueErrorOutput",
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT (\n    SELECT json_build_object(\n        'orderId', order_id,\n        'sku', sku,\n        'productName', product_name,\n        'channel', channel,\n        'deliveredOn', to_char(delivered_on, 'YYYY-MM-DD'),\n        'warrantyMonths', warranty_months,\n        'requiresSerial', requires_serial\n    )\n    FROM jaleco.pedidos\n    WHERE order_id = $1\n) AS pedido",
+        "options": { "queryReplacement": "={{ [$json.orderId] }}" }
+      }
+    },
+    {
+      "id": "214a832a-7b85-45d6-9ae7-1dbcd08cde8a",
+      "name": "Preparar evidencia del pedido",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [930, -180],
+      "parameters": {
+        "jsCode": "const { pedido } = $input.first().json;\nif (!pedido) {\n  const output = 'No encontré ese pedido. Verifica el número e inténtalo de nuevo.';\n  return [{ json: { status: 200, body: { output, evidence: [], draft: null } } }];\n}\n\nconst output = `El pedido ${pedido.orderId} corresponde a ${pedido.productName} y se entregó el ${pedido.deliveredOn}.`;\nconst evidence = [{ source: 'pedidos', recordId: pedido.orderId, data: pedido }];\nreturn [{ json: { status: 200, body: { output, evidence, draft: null } } }];"
+      }
+    },
+    {
+      "id": "43fe2d12-941f-45cb-99ea-2c58ce32c5c7",
+      "name": "Responder falla de la fuente",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [930, -20],
+      "parameters": {
+        "jsCode": "return [{\n  json: {\n    status: 503,\n    body: {\n      output: 'No se pudo consultar la fuente de pedidos. Inténtalo de nuevo en unos minutos.',\n      error: { code: 'DATA_SOURCE_UNAVAILABLE' },\n    },\n  },\n}];"
+      }
+    },
+    {
+      "id": "fa1fed4a-a0be-49bf-81c8-7a30acfbba61",
+      "name": "Responder JSON",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [1160, 100],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json.body }}",
+        "options": {
+          "responseCode": "={{ $json.status }}"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook chat": {
+      "main": [[{ "node": "Validar chat y extraer pedido", "type": "main", "index": 0 }]]
+    },
+    "Webhook radicación": {
+      "main": [[{ "node": "Validar radicación", "type": "main", "index": 0 }]]
+    },
+    "Validar chat y extraer pedido": {
+      "main": [[{ "node": "¿Consultar pedido?", "type": "main", "index": 0 }]]
+    },
+    "¿Consultar pedido?": {
+      "main": [
+        [{ "node": "Consultar pedido en PostgreSQL", "type": "main", "index": 0 }],
+        [{ "node": "Responder JSON", "type": "main", "index": 0 }]
+      ]
+    },
+    "Consultar pedido en PostgreSQL": {
+      "main": [
+        [{ "node": "Preparar evidencia del pedido", "type": "main", "index": 0 }],
+        [{ "node": "Responder falla de la fuente", "type": "main", "index": 0 }]
+      ]
+    },
+    "Preparar evidencia del pedido": {
+      "main": [[{ "node": "Responder JSON", "type": "main", "index": 0 }]]
+    },
+    "Responder falla de la fuente": {
+      "main": [[{ "node": "Responder JSON", "type": "main", "index": 0 }]]
+    },
+    "Validar radicación": {
+      "main": [[{ "node": "Responder JSON", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/Bogota"
+  },
+  "pinData": {}
+}

@@ -1,0 +1,71 @@
+name: jaleco
+
+services:
+  postgres:
+    image: postgres:17.12-bookworm
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: jaleco
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+      JALECO_READER_PASSWORD: ${JALECO_READER_PASSWORD:?Set JALECO_READER_PASSWORD in .env}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./n8n/db/init.sql:/docker-entrypoint-initdb.d/01-jaleco.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+
+  n8n:
+    image: n8nio/n8n:2.49.6
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      N8N_PROTOCOL: http
+      N8N_SECURE_COOKIE: "false"
+      N8N_DIAGNOSTICS_ENABLED: "false"
+      N8N_VERSION_NOTIFICATIONS_ENABLED: "false"
+      GENERIC_TIMEZONE: America/Bogota
+      TZ: America/Bogota
+    ports:
+      - "127.0.0.1:${N8N_HOST_PORT:-5678}:5678"
+    volumes:
+      - n8n_data:/home/node/.n8n
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:5678/healthz/readiness').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"
+      interval: 5s
+      timeout: 3s
+      retries: 24
+
+  streamlit:
+    build: ./app
+    restart: unless-stopped
+    depends_on:
+      n8n:
+        condition: service_healthy
+    environment:
+      N8N_BASE_URL: http://n8n:5678
+      N8N_WEBHOOK_KEY: ${N8N_WEBHOOK_KEY:?Set N8N_WEBHOOK_KEY in .env}
+    ports:
+      - "127.0.0.1:${STREAMLIT_HOST_PORT:-8501}:8501"
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "from urllib.request import urlopen; urlopen('http://127.0.0.1:8501/_stcore/health', timeout=2).close()"
+      interval: 5s
+      timeout: 3s
+      retries: 12
+
+volumes:
+  postgres_data:
+  n8n_data:

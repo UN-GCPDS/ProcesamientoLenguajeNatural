@@ -1,2 +1,10 @@
 .env
+.env.*
+!.env.example
+.venv/
 __pycache__/
+*.pyc
+**/.streamlit/secrets.toml
+/Presentacion.aux
+/Presentacion.log
+/Presentacion.out
